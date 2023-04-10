@@ -1,9 +1,9 @@
 WITH ca1_combined AS (
-SELECT name, COALESCE(ca_1_a_c, CAST(ca_1_a_num_c AS string), ca_1_a_pl_c, ca_1_a_program_c) AS ca_1 from ip-ipg-data.salesforce.walkthrough_c
+SELECT name, subject_c, COALESCE(ca_1_a_c, CAST(ca_1_a_num_c AS string), ca_1_a_pl_c, ca_1_a_program_c) AS ca_1 from ip-ipg-data.salesforce.walkthrough_c
 ),
 
 dummy AS (
-    SELECT name,
+    SELECT name, subject_c,
     
     CASE CAST(ca_1 as STRING)
     WHEN NULL THEN NULL
@@ -19,37 +19,37 @@ dummy AS (
      FROM ca1_combined),
 
  grouped AS (
-        SELECT name,
+        SELECT name, subject_c,
         COUNT(name) AS num_walkthroughs,
         SUM(ca1_pi_count) AS num_pi
         FROM dummy
         WHERE ca1_pi_count IS NOT NULL
-        GROUP BY 1
+        GROUP BY 1,2
  ),
-walkthrough_lvl AS (
-        SELECT name,
-        num_pi/num_walkthroughs*100 AS ca1_ppi
-        FROM grouped 
- ),
+
 
 school_codes AS (
     SELECT name, school_c FROM ip-ipg-data.salesforce.walkthrough_c
 ),
 
- school_lvl AS (
-     SELECT name, 
-     round(AVG(ca1_ppi), 0) AS ca1_percentpi FROM walkthrough_lvl
-     GROUP BY 1
- ),
+walkthrough_lvl AS (
+        SELECT name, school_c, subject_c,
+        num_pi/num_walkthroughs AS ca1_ppi
+        FROM grouped 
+        JOIN school_codes using (name)
+        
+ ), 
 
- ca1_ppi_final AS (
-     SELECT * from school_lvl 
-     JOIN school_codes using (name)
+  school_lvl AS (
+     SELECT school_c, subject_c,
+     round(AVG(ca1_ppi), 2) AS ca1_percentpi FROM walkthrough_lvl
+     GROUP BY 1,2
  )
 
+
+
+
  SELECT * FROM school_lvl
-
-
 
 
 
