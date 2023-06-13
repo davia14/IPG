@@ -38,4 +38,4 @@ models:
     models:
     +materialized: table
     example:
-      +materialized: view
+      +materialized: table
