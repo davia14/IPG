@@ -1,0 +1,3 @@
+SELECT system, school, school_year, subject, date, AVG(standard_alignment_c) AS standard_alignment,AVG(mastery_c) AS mastery, AVG(ca_1a_binary) AS CA_1A, AVG(ca_1b_binary) AS CA_1B, AVG(ca_1c_binary) AS CA_1C, AVG(ca_1d) AS CA_1D, 
+AVG(ca_2_a_c) AS CA_2A, AVG(ca_2_b_c) AS CA_2B, AVG(ca_2_c_c) AS CA_2C, AVG(ca_2_d_c) AS CA_2D, AVG(ca_2_e_c) AS CA_2E, AVG(ca_2_f_c) AS CA_2F, AVG(ca_3_a_c) AS CA_3A, AVG(ca_3_b_c) AS CA_3B, AVG(ca_3_c_c) AS CA_3C, AVG(ca_3_d_c) AS CA_3D, AVG(ca_3_e_c) AS CA_3E, 
+AVG(ca_1_ppi) AS CA_1_PPI, AVG(ca2ppi) AS CA_2_PPI, AVG(ca3ppi) AS CA_3_PPI, AVG(totalppi) AS total_PPI FROM ip-ipg-data.ipg_transformations.walkthroughcollectionlvl GROUP BY 1,2,3,4,5
