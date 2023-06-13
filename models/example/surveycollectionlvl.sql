@@ -63,7 +63,7 @@ survwfacilitators AS (SELECT cleantype.survey_collection, school_year_c, survey_
 FROM cleantype JOIN facilitators using (survey_collection)),
 
 finaltable AS (SELECT survey_collection, survey_type, date_c, f.school_year_c, school.name AS school, sys.name AS system, question, num_of_responses, pct_sa_only, pct_agree_only, pct_sa_a, primary_facilitator, secondary_facilitator, tertiary_facilitator, quaternary_facilitator 
-FROM survwfacilitators AS f JOIN ip-ipg-data.salesforce.system_year_engagement_c AS sys ON f.system_year_engagement_c = sys.system_c JOIN ip-ipg-data.salesforce.school_year_engagement_c AS school on f.cfg_school_c = school.school_c)
+FROM survwfacilitators AS f JOIN ip-ipg-data.salesforce.system_year_engagement_c AS sys ON f.system_year_engagement_c = sys.id JOIN ip-ipg-data.salesforce.school_year_engagement_c AS school on f.cfg_school_c = school.school_c AND f.school_year_c = school.school_year_c)
 
 SELECT * FROM finaltable
 
