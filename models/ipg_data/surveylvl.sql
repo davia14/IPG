@@ -42,6 +42,17 @@ survwfacilitators AS (SELECT cleantype.survey_collection, school_year_c, survey_
 FROM cleantype JOIN facilitators using (survey_collection)),
 
 finaltable AS (SELECT survey_collection, survey_type, date_c, f.school_year_c, left(school.name, length(school.name)-16) AS school, left(sys.name, length(sys.name)-16) AS system, submitter_first_name_c, submitter_last_name_c, submitters_email_c, question, response, primary_facilitator, secondary_facilitator, tertiary_facilitator, quaternary_facilitator 
-FROM survwfacilitators AS f JOIN ip-ipg-data.salesforce.system_year_engagement_c AS sys ON f.system_year_engagement_c = sys.id JOIN ip-ipg-data.salesforce.school_year_engagement_c AS school on f.cfg_school_c = school.school_c AND f.school_year_c = school.school_year_c)
+FROM survwfacilitators AS f JOIN ip-ipg-data.salesforce.system_year_engagement_c AS sys ON f.system_year_engagement_c = sys.id JOIN ip-ipg-data.salesforce.school_year_engagement_c AS school on f.cfg_school_c = school.school_c AND f.school_year_c = school.school_year_c),
 
-SELECT * FROM finaltable
+uniquesys AS (
+SELECT DISTINCT School, New_System FROM ip-ipg-data.dimension_table.pmdim), 
+
+newsys AS (SELECT surv.*, dim.New_System AS new_system FROM finaltable AS surv LEFT OUTER JOIN uniquesys AS dim on surv.school = dim.School),
+cleansys AS (SELECT survey_collection, survey_type, date_c, school_year_c, school, system, 
+CASE 
+WHEN new_system IS NULL THEN system ELSE new_system END AS new_system, submitter_first_name_c, submitter_last_name_c, submitters_email_c,
+question, response, primary_facilitator, secondary_facilitator, tertiary_facilitator, quaternary_facilitator 
+FROM newsys)
+
+
+SELECT * FROM cleansys
