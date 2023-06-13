@@ -220,7 +220,7 @@ WHEN ca3scored = 0 OR ca3scored IS NULL then NULL ELSE ca3pos/ca3scored END AS c
 FROM ca23ppi
 ), 
 
-allind AS (select ca1.name, ca1.subject_c, ca1.visit_c, visit_type_c, ca1.date_c, ca1.system_c, ca1.school_year_engagement_c, standard_alignment_c, mastery_c, ca_1a_binary, ca_1b_binary, ca_1c_binary, ca_1d, ca1ppi_scored_ind, ca1ppi_pos_ind, ca_2_a_c, ca_2_b_c, ca_2_c_c, ca_2_d_c, ca_2_e_c, ca_2_f_c, ca_3_a_c, ca_3_b_c, ca_3_c_c, ca_3_d_c, ca_3_e_c, ca2scored, ca2pos, ca3scored, ca3pos, ca2ppi, ca3ppi, 
+allind AS (select ca1.name, ca1.subject_c, ca1.visit_c, visit_type_c, ca1.date_c, ca1.system_c, ca1.school_year_engagement_c, standard_alignment_c, mastery_c, ca_1a_binary, ca_1b_binary, ca_1c_binary, ca_1d, ca1ppi_scored_ind, ca1ppi_pos_ind, ca_1_ppi, ca_2_a_c, ca_2_b_c, ca_2_c_c, ca_2_d_c, ca_2_e_c, ca_2_f_c, ca_3_a_c, ca_3_b_c, ca_3_c_c, ca_3_d_c, ca_3_e_c, ca2scored, ca2pos, ca3scored, ca3pos, ca2ppi, ca3ppi, 
 CASE 
 WHEN standard_alignment_c IS NOT NULL THEN 1 ELSE 0 END + 
 
@@ -237,7 +237,7 @@ CASE WHEN mastery_c = 3 OR mastery_c = 4 THEN 1 ELSE 0 END +
 FROM ca1_ppi_table AS ca1 JOIN ca23ppitable AS ca23 on ca1.name = ca23.name),
 
 
-finaltable AS (select name, subject_c, visit_type_c, visit_c, date_c, system_c, school_year_engagement_c, ca_1a_binary, ca_1b_binary, ca_1c_binary, ca_1d, ca1ppi_scored_ind, ca1ppi_pos_ind, ca_2_a_c, ca_2_b_c, ca_2_c_c, ca_2_d_c, ca_2_e_c, ca_2_f_c, ca_3_a_c, ca_3_b_c, ca_3_c_c, ca_3_d_c, ca_3_e_c, ca2scored, ca2pos, ca3scored, ca3pos, ca2ppi, ca3ppi, totalscoredind, totalposind,
+finaltable AS (select name, subject_c, visit_type_c, visit_c, date_c, system_c, school_year_engagement_c, standard_alignment_c, mastery_c, ca_1a_binary, ca_1b_binary, ca_1c_binary, ca_1d, ca1ppi_scored_ind, ca1ppi_pos_ind, ca_1_ppi, ca_2_a_c, ca_2_b_c, ca_2_c_c, ca_2_d_c, ca_2_e_c, ca_2_f_c, ca_3_a_c, ca_3_b_c, ca_3_c_c, ca_3_d_c, ca_3_e_c, ca2scored, ca2pos, ca3scored, ca3pos, ca2ppi, ca3ppi, totalscoredind, totalposind,
 CASE
 WHEN totalscoredind=0 OR totalscoredind IS NULL THEN NULL ELSE totalposind/totalscoredind END AS totalppi
 FROM allind),
@@ -249,4 +249,4 @@ FROM finaltable AS f JOIN ip-ipg-data.salesforce.school_year_engagement_c AS sch
 
 finalwithsys AS (SELECT f.*, sys.name AS system_year_engagment FROM finalwithschool AS f join ip-ipg-data.salesforce.system_year_engagement_c AS sys ON f.system_c =sys.system_c AND f.school_year = sys.school_year_c)
 
-SELECT * FROM finalwithsys
+SELECT left(system_year_engagment, length(system_year_engagment)-16) AS system, left(school_year_engagement, length(school_year_engagement)-16) AS school, school_year, name AS walkthroughname, subject_c AS subject, date_c AS date, visit_type_c, visit_c, standard_alignment_c, mastery_c, ca_1a_binary, ca_1b_binary, ca_1c_binary, ca_1d, ca_2_a_c, ca_2_b_c, ca_2_c_c, ca_2_d_c, ca_2_e_c, ca_2_f_c, ca_3_a_c, ca_3_b_c, ca_3_c_c, ca_3_d_c, ca_3_e_c, ca1ppi_scored_ind, ca1ppi_pos_ind, ca2scored, ca2pos, ca3scored, ca3pos, ca_1_ppi, ca2ppi, ca3ppi, totalscoredind, totalposind, totalppi  FROM finalwithsys WHERE (subject_c = "ELA" OR subject_c="Math" OR subject_c = "Science") AND (visit_type_c = "Formal" OR (visit_type_c IS NULL AND totalscoredind>=7))
