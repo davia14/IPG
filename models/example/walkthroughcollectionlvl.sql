@@ -1,0 +1,3 @@
+SELECT system, school, school_year, subject, date, visit_c, AVG(standard_alignment_c),AVG(mastery_c), AVG(ca_1a_binary), AVG(ca_1b_binary), AVG(ca_1c_binary), AVG(ca_1d), 
+AVG(ca_2_a_c), AVG(ca_2_b_c), AVG(ca_2_c_c), AVG(ca_2_d_c), AVG(ca_2_e_c), AVG(ca_2_f_c), AVG(ca_3_a_c), AVG(ca_3_b_c), AVG(ca_3_c_c), AVG(ca_3_d_c), AVG(ca_3_e_c), 
+AVG(ca_1_ppi), AVG(ca2ppi), AVG(ca3ppi), AVG(totalppi) FROM ip-ipg-data.ipg_transformations.surveycollectionlvlUP BY 1,2,3,4,5,6

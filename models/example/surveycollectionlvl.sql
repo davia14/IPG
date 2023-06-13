@@ -44,16 +44,16 @@ WHEN type_c = "Walkthrough" THEN "Walkthrough and Debrief"
 ELSE type_c END AS survey_type 
 FROM joined), 
 
-primary AS (select survey_collection, u.name AS primary_facilitator FROM cleantype JOIN ip-ipg-data.salesforce.user AS u ON cleantype.primary_facilitator_c = u.id), 
+primary AS (select distinct survey_collection, u.name AS primary_facilitator FROM cleantype JOIN ip-ipg-data.salesforce.user AS u ON cleantype.primary_facilitator_c = u.id), 
 
 
-secondary AS (select survey_collection, u.name AS secondary_facilitator FROM cleantype JOIN ip-ipg-data.salesforce.user AS u ON cleantype.secondary_facilitator_c = u.id), 
+secondary AS (select distinct survey_collection, u.name AS secondary_facilitator FROM cleantype JOIN ip-ipg-data.salesforce.user AS u ON cleantype.secondary_facilitator_c = u.id), 
 
 
-tertiary AS (select survey_collection, u.name AS tertiary_facilitator FROM cleantype JOIN ip-ipg-data.salesforce.user AS u ON cleantype.tertiary_facilitator_c = u.id), 
+tertiary AS (select distinct survey_collection, u.name AS tertiary_facilitator FROM cleantype JOIN ip-ipg-data.salesforce.user AS u ON cleantype.tertiary_facilitator_c = u.id), 
 
 
-quaternary AS (select survey_collection, u.name AS quaternary_facilitator FROM cleantype JOIN ip-ipg-data.salesforce.user AS u ON cleantype.quaternary_facilitator_c = u.id), 
+quaternary AS (select distinct survey_collection, u.name AS quaternary_facilitator FROM cleantype JOIN ip-ipg-data.salesforce.user AS u ON cleantype.quaternary_facilitator_c = u.id), 
 
 facilitators AS (select primary.survey_collection, primary_facilitator, secondary_facilitator, tertiary_facilitator, quaternary_facilitator 
 
@@ -62,8 +62,8 @@ FROM primary LEFT OUTER JOIN secondary using (survey_collection) LEFT OUTER JOIN
 survwfacilitators AS (SELECT cleantype.survey_collection, school_year_c, survey_type, date_c, system_year_engagement_c, cfg_school_c, question, num_of_responses, pct_sa_only, pct_agree_only, pct_sa_a, primary_facilitator, secondary_facilitator, tertiary_facilitator, quaternary_facilitator
 FROM cleantype JOIN facilitators using (survey_collection)),
 
-finaltable AS (SELECT survey_collection, survey_type, date_c, f.school_year_c, school.name AS school, sys.name AS system, question, num_of_responses, pct_sa_only, pct_agree_only, pct_sa_a, primary_facilitator, secondary_facilitator, tertiary_facilitator, quaternary_facilitator 
-FROM survwfacilitators AS f JOIN ip-ipg-data.salesforce.system_year_engagement_c AS sys ON f.system_year_engagement_c = sys.system_c JOIN ip-ipg-data.salesforce.school_year_engagement_c AS school on f.cfg_school_c = school.school_c)
+finaltable AS (SELECT survey_collection, survey_type, date_c, f.school_year_c, left(school.name, length(school.name)-16) AS school, left(sys.name, length(sys.name)-16) AS system, question, num_of_responses, pct_sa_only, pct_agree_only, pct_sa_a, primary_facilitator, secondary_facilitator, tertiary_facilitator, quaternary_facilitator 
+FROM survwfacilitators AS f JOIN ip-ipg-data.salesforce.system_year_engagement_c AS sys ON f.system_year_engagement_c = sys.id JOIN ip-ipg-data.salesforce.school_year_engagement_c AS school on f.cfg_school_c = school.school_c AND f.school_year_c = school.school_year_c)
 
 SELECT * FROM finaltable
 
