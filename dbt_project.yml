@@ -34,8 +34,5 @@ clean-targets:         # directories to be removed by `dbt clean`
 models:
   ipg_data:
     # Applies to all files under models/example/
-    
-    models:
     +materialized: table
-    example:
-      +materialized: view
+
