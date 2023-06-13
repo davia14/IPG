@@ -8,7 +8,7 @@ WHEN new_system IS NULL THEN system ELSE new_system END AS new_system,
 question, num_of_responses, pct_sa_only, pct_agree_only, pct_sa_a, primary_facilitator, secondary_facilitator, tertiary_facilitator, quaternary_facilitator 
 FROM newsys), 
 
-av AS (SELECT system, new_system, survey_type, school_year_c AS school_year, question, SUM(num_of_responses), AVG(pct_sa_only), AVG(pct_agree_only), AVG(pct_sa_a)
+av AS (SELECT system, new_system, survey_type, school_year_c AS school_year, question, SUM(num_of_responses) AS num_of_responses, AVG(pct_sa_only) AS pct_sa_only, AVG(pct_agree_only) AS pct_agree_only, AVG(pct_sa_a) AS pct_sa_a
 FROM cleansys GROUP BY 1,2,3,4,5)
 
 select * FROM av
