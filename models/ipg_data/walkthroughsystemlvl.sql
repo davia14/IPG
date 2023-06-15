@@ -2,7 +2,7 @@ WITH  uniquesys AS (select distinct New_System, School FROM ip-ipg-data.dimensio
 
 
 newsys AS
- (select dim.New_System, school.*,  from ip-ipg-data.ipg_transformations.walkthroughschoollvl AS school LEFT OUTER JOIN uniquesys dim ON school.school = dim.School),
+ (select dim.New_System, school.*,  from {{ref("walkthroughschoollvl")}} AS school LEFT OUTER JOIN uniquesys dim ON school.school = dim.School),
 
 
  
