@@ -1,9 +1,21 @@
 WITH ca1_combined AS (
-SELECT name, subject_c, visit_c, ca_1_d_c AS ca_1d, COALESCE(CAST(ca_1_c_num_c AS string), ca_1_c_pl_c) AS ca_1c, COALESCE(CAST(ca_1_b_c AS string), ca_1_b_pl_c) AS ca_1b, COALESCE(ca_1_a_c, CAST(ca_1_a_num_c AS string), ca_1_a_pl_c) AS ca_1a from ip-ipg-data.salesforce.walkthrough_c
+SELECT name, record_type_id, visit_c, ca_1_d_c AS ca_1d, COALESCE(CAST(ca_1_c_num_c AS string), ca_1_c_pl_c) AS ca_1c, COALESCE(CAST(ca_1_b_c AS string), ca_1_b_pl_c) AS ca_1b, COALESCE(ca_1_a_c, CAST(ca_1_a_num_c AS string), ca_1_a_pl_c) AS ca_1a from ip-ipg-data.salesforce.walkthrough_c
 ),
 
+getrecordtype AS (select ca.*, r.name AS record_type FROM ca1_combined AS ca LEFT OUTER JOIN ip-ipg-data.salesforce.record_type AS r ON ca.record_type_id = r.id),
+
+subjectclean AS (select *, 
+
+CASE
+WHEN regexp_contains(record_type, "ELA") THEN "ELA"
+WHEN regexp_contains(record_type, "Math") THEN "Math"
+WHEN regexp_contains(record_type, "Science") Then "Science"
+WHEN regexp_contains(record_type, "K2") Then "K2 Foundational"
+ELSE "Other" END AS subject_c
+FROM getrecordtype),
+
 dummy AS (
-    SELECT walk.name, subject_c, visit_c, visit_type_c, date_c, system_c, school_year_engagement_c,
+    SELECT walk.name, subject_c, record_type, visit_c, visit_type_c, date_c, system_c, school_year_engagement_c,
     
     CASE CAST(ca_1a as STRING)
     WHEN NULL THEN NULL
@@ -44,11 +56,11 @@ CASE CAST(ca_1c as STRING)
     
     ca_1d
 
-    FROM ca1_combined AS walk join ip-ipg-data.salesforce.visit_c as visit on walk.visit_c = visit.id),
+    FROM subjectclean AS walk join ip-ipg-data.salesforce.visit_c as visit on walk.visit_c = visit.id),
 
     dummy_ELA AS (
 
-    SELECT name, subject_c, date_c, visit_c, visit_type_c, system_c, school_year_engagement_c, ca_1d,
+    SELECT name, subject_c, record_type, date_c, visit_c, visit_type_c, system_c, school_year_engagement_c, ca_1d,
 
     CASE
 
@@ -118,7 +130,7 @@ CASE CAST(ca_1c as STRING)
 
 ca1_ppi_table AS (
 
-        select name, subject_c, date_c, visit_c, visit_type_c, system_c, school_year_engagement_c, ca_1a_binary, ca_1b_binary, ca_1c_binary, CAST(ca_1d AS float64) AS ca_1d, ca1ppi_pos_ind, ca1ppi_scored_ind, 
+        select name, subject_c, record_type, date_c, visit_c, visit_type_c, system_c, school_year_engagement_c, ca_1a_binary, ca_1b_binary, ca_1c_binary, CAST(ca_1d AS float64) AS ca_1d, ca1ppi_pos_ind, ca1ppi_scored_ind, 
         
         CASE WHEN ca1ppi_scored_ind = 0 OR ca1ppi_scored_ind IS NULL THEN NULL ELSE ca1ppi_pos_ind/ca1ppi_scored_ind END AS ca_1_ppi, 
         
@@ -128,12 +140,14 @@ ca1_ppi_table AS (
     ),
 
  ca2and3 AS (
-select walk.name, subject_c, visit_c, date_c, system_c, school_year_engagement_c, mastery_c, standard_alignment_c, ca_2_a_c, ca_2_b_c, ca_2_c_c, ca_2_d_c, ca_2_e_c, ca_2_f_c, ca_3_a_c, ca_3_b_c, ca_3_c_c, ca_3_d_c, ca_3_e_c from ip-ipg-data.salesforce.walkthrough_c AS walk
+select walk.name, record_type_id, visit_c, date_c, system_c, school_year_engagement_c, mastery_c, standard_alignment_c, ca_2_a_c, ca_2_b_c, ca_2_c_c, ca_2_d_c, ca_2_e_c, ca_2_f_c, ca_3_a_c, ca_3_b_c, ca_3_c_c, ca_3_d_c, ca_3_e_c from ip-ipg-data.salesforce.walkthrough_c AS walk
 JOIN ip-ipg-data.salesforce.visit_c as visit on walk.visit_c = visit.id), 
+
+joinsub AS (select ca.*, r.subject_c, r.record_type FROM ca2and3 AS ca JOIN subjectclean AS r USING (record_type_id)), 
 
 ca23swap AS (
 
-select name, subject_c, visit_c, date_c, system_c, school_year_engagement_c, mastery_c, standard_alignment_c, ca_2_a_c, ca_2_b_c, ca_2_c_c, ca_2_d_c, ca_2_f_c, ca_3_a_c, ca_3_b_c, ca_3_c_c, ca_3_d_c,
+select name, subject_c, record_type, visit_c, date_c, system_c, school_year_engagement_c, mastery_c, standard_alignment_c, ca_2_a_c, ca_2_b_c, ca_2_c_c, ca_2_d_c, ca_2_f_c, ca_3_a_c, ca_3_b_c, ca_3_c_c, ca_3_d_c,
 
 CASE 
 
@@ -145,10 +159,10 @@ CASE
 WHEN subject_c = "ELA" AND date_c < '2021-08-01'
 THEN NULL ELSE ca_3_e_c END AS ca_3_e_c
 
-from ca2and3), 
+from joinsub), 
 
 ca23ppi AS (
-select name, subject_c, visit_c, date_c, system_c, school_year_engagement_c, standard_alignment_c, mastery_c, ca_2_a_c, ca_2_b_c, ca_2_c_c, ca_2_d_c, ca_2_e_c, ca_2_f_c, ca_3_a_c, ca_3_b_c, ca_3_c_c, ca_3_d_c, ca_3_e_c,
+select name, subject_c, record_type, visit_c, date_c, system_c, school_year_engagement_c, standard_alignment_c, mastery_c, ca_2_a_c, ca_2_b_c, ca_2_c_c, ca_2_d_c, ca_2_e_c, ca_2_f_c, ca_3_a_c, ca_3_b_c, ca_3_c_c, ca_3_d_c, ca_3_e_c,
 CASE 
 WHEN ca_2_a_c IS NOT NULL THEN 1 ELSE 0 END +
 
@@ -209,10 +223,9 @@ WHEN ca_3_d_c = 3 or ca_3_d_c = 4 THEN 1 ELSE 0 END +
 CASE 
 WHEN ca_3_e_c=3 OR ca_3_e_c = 4 THEN 1 ELSE 0 END AS ca3pos
 
-FROM ca2and3
-), 
+FROM ca23swap), 
 
-ca23ppitable AS (select name, subject_c, visit_c, date_c, system_c, school_year_engagement_c, standard_alignment_c, mastery_c, ca_2_a_c, ca_2_b_c, ca_2_c_c, ca_2_d_c, ca_2_e_c, ca_2_f_c, ca_3_a_c, ca_3_b_c, ca_3_c_c, ca_3_d_c, ca_3_e_c, ca2scored, ca2pos, ca3scored, ca3pos,
+ca23ppitable AS (select name, subject_c, record_type, visit_c, date_c, system_c, school_year_engagement_c, standard_alignment_c, mastery_c, ca_2_a_c, ca_2_b_c, ca_2_c_c, ca_2_d_c, ca_2_e_c, ca_2_f_c, ca_3_a_c, ca_3_b_c, ca_3_c_c, ca_3_d_c, ca_3_e_c, ca2scored, ca2pos, ca3scored, ca3pos,
 CASE
 WHEN ca2scored = 0 OR ca2scored IS NULL then NULL ELSE ca2pos/ca2scored END AS ca2ppi,
 CASE
@@ -220,7 +233,7 @@ WHEN ca3scored = 0 OR ca3scored IS NULL then NULL ELSE ca3pos/ca3scored END AS c
 FROM ca23ppi
 ), 
 
-allind AS (select ca1.name, ca1.subject_c, ca1.visit_c, visit_type_c, ca1.date_c, ca1.system_c, ca1.school_year_engagement_c, standard_alignment_c, mastery_c, ca_1a_binary, ca_1b_binary, ca_1c_binary, ca_1d, ca1ppi_scored_ind, ca1ppi_pos_ind, ca_1_ppi, ca_2_a_c, ca_2_b_c, ca_2_c_c, ca_2_d_c, ca_2_e_c, ca_2_f_c, ca_3_a_c, ca_3_b_c, ca_3_c_c, ca_3_d_c, ca_3_e_c, ca2scored, ca2pos, ca3scored, ca3pos, ca2ppi, ca3ppi, 
+allind AS (select ca1.name, ca1.subject_c, ca1.record_type, ca1.visit_c, visit_type_c, ca1.date_c, ca1.system_c, ca1.school_year_engagement_c, standard_alignment_c, mastery_c, ca_1a_binary, ca_1b_binary, ca_1c_binary, ca_1d, ca1ppi_scored_ind, ca1ppi_pos_ind, ca_1_ppi, ca_2_a_c, ca_2_b_c, ca_2_c_c, ca_2_d_c, ca_2_e_c, ca_2_f_c, ca_3_a_c, ca_3_b_c, ca_3_c_c, ca_3_d_c, ca_3_e_c, ca2scored, ca2pos, ca3scored, ca3pos, ca2ppi, ca3ppi, 
 CASE 
 WHEN standard_alignment_c IS NOT NULL THEN 1 ELSE 0 END + 
 
@@ -237,7 +250,7 @@ CASE WHEN mastery_c = 3 OR mastery_c = 4 THEN 1 ELSE 0 END +
 FROM ca1_ppi_table AS ca1 JOIN ca23ppitable AS ca23 on ca1.name = ca23.name),
 
 
-finaltable AS (select name, subject_c, visit_type_c, visit_c, date_c, system_c, school_year_engagement_c, standard_alignment_c, mastery_c, ca_1a_binary, ca_1b_binary, ca_1c_binary, ca_1d, ca1ppi_scored_ind, ca1ppi_pos_ind, ca_1_ppi, ca_2_a_c, ca_2_b_c, ca_2_c_c, ca_2_d_c, ca_2_e_c, ca_2_f_c, ca_3_a_c, ca_3_b_c, ca_3_c_c, ca_3_d_c, ca_3_e_c, ca2scored, ca2pos, ca3scored, ca3pos, ca2ppi, ca3ppi, totalscoredind, totalposind,
+finaltable AS (select name, subject_c, record_type, visit_type_c, visit_c, date_c, system_c, school_year_engagement_c, standard_alignment_c, mastery_c, ca_1a_binary, ca_1b_binary, ca_1c_binary, ca_1d, ca1ppi_scored_ind, ca1ppi_pos_ind, ca_1_ppi, ca_2_a_c, ca_2_b_c, ca_2_c_c, ca_2_d_c, ca_2_e_c, ca_2_f_c, ca_3_a_c, ca_3_b_c, ca_3_c_c, ca_3_d_c, ca_3_e_c, ca2scored, ca2pos, ca3scored, ca3pos, ca2ppi, ca3ppi, totalscoredind, totalposind,
 CASE
 WHEN totalscoredind=0 OR totalscoredind IS NULL THEN NULL ELSE totalposind/totalscoredind END AS totalppi
 FROM allind),
@@ -249,4 +262,4 @@ FROM finaltable AS f JOIN ip-ipg-data.salesforce.school_year_engagement_c AS sch
 
 finalwithsys AS (SELECT f.*, sys.name AS system_year_engagment FROM finalwithschool AS f join ip-ipg-data.salesforce.system_year_engagement_c AS sys ON f.system_c =sys.system_c AND f.school_year = sys.school_year_c)
 
-SELECT left(system_year_engagment, length(system_year_engagment)-16) AS system, left(school_year_engagement, length(school_year_engagement)-16) AS school, school_year, name AS walkthroughname, subject_c AS subject, date_c AS date, visit_type_c, visit_c, standard_alignment_c, mastery_c, ca_1a_binary, ca_1b_binary, ca_1c_binary, ca_1d, ca_2_a_c, ca_2_b_c, ca_2_c_c, ca_2_d_c, ca_2_e_c, ca_2_f_c, ca_3_a_c, ca_3_b_c, ca_3_c_c, ca_3_d_c, ca_3_e_c, ca1ppi_scored_ind, ca1ppi_pos_ind, ca2scored, ca2pos, ca3scored, ca3pos, ca_1_ppi, ca2ppi, ca3ppi, totalscoredind, totalposind, totalppi  FROM finalwithsys WHERE (subject_c = "ELA" OR subject_c="Math" OR subject_c = "Science") AND (visit_type_c = "Formal" OR (visit_type_c IS NULL AND totalscoredind>=7))
+SELECT left(system_year_engagment, length(system_year_engagment)-16) AS system, left(school_year_engagement, length(school_year_engagement)-16) AS school, school_year, name AS walkthroughname, subject_c AS subject, record_type, date_c AS date, visit_type_c, visit_c, standard_alignment_c, mastery_c, ca_1a_binary, ca_1b_binary, ca_1c_binary, ca_1d, ca_2_a_c, ca_2_b_c, ca_2_c_c, ca_2_d_c, ca_2_e_c, ca_2_f_c, ca_3_a_c, ca_3_b_c, ca_3_c_c, ca_3_d_c, ca_3_e_c, ca1ppi_scored_ind, ca1ppi_pos_ind, ca2scored, ca2pos, ca3scored, ca3pos, ca_1_ppi, ca2ppi, ca3ppi, totalscoredind, totalposind, totalppi  FROM finalwithsys WHERE (subject_c = "ELA" OR subject_c = "Math" OR subject_c = "Science") AND (visit_type_c = "Formal" OR (visit_type_c IS NULL AND totalscoredind>=7))
